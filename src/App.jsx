@@ -47,7 +47,8 @@ import {
   PanelLeftClose,
   PanelLeft,
   GitBranch,
-  CheckCircle2
+  CheckCircle2,
+  FileCheck
 } from 'lucide-react';
 import { TEMPLATES } from './templates';
 
@@ -512,6 +513,69 @@ export default function App() {
     }
   };
 
+  const handleDownloadStandaloneHtml = () => {
+    const isDark = currentTheme.mode === 'dark';
+    const standaloneHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${activeDoc.title.replace(/\.md$/, '')}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.0/github-markdown.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/${isDark ? 'github-dark' : 'github'}.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      min-width: 200px;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px;
+      background-color: ${currentTheme.bg};
+      color: ${currentTheme.text};
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    .markdown-body {
+      background-color: transparent !important;
+      color: inherit !important;
+    }
+    .gh-alert { padding: 12px 16px; margin: 16px 0; border-left: 4px solid; border-radius: 6px; }
+    .gh-alert-note { border-color: #2f81f7; background: rgba(56, 139, 253, 0.1); }
+    .gh-alert-tip { border-color: #3fb950; background: rgba(46, 160, 67, 0.1); }
+    .gh-alert-important { border-color: #a371f7; background: rgba(163, 113, 247, 0.1); }
+    .gh-alert-warning { border-color: #d29922; background: rgba(187, 128, 9, 0.1); }
+    .gh-alert-caution { border-color: #f85149; background: rgba(248, 81, 73, 0.1); }
+    .studio-code-block { border: 1px solid #30363d; border-radius: 8px; overflow: hidden; margin: 16px 0; }
+    .code-header { display: flex; justify-content: space-between; padding: 6px 12px; background: rgba(255,255,255,0.05); font-family: monospace; font-size: 11px; }
+    .mermaid-container { background: rgba(0,0,0,0.2); border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 16px 0; text-align: center; }
+  </style>
+</head>
+<body class="markdown-body">
+  <article>
+    ${parsedHtml}
+  </article>
+  <footer style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #30363d; font-size: 11px; opacity: 0.6; font-family: monospace;">
+    Exported from mdview Studio • ${new Date().toLocaleDateString()}
+  </footer>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({ startOnLoad: true, theme: '${isDark ? 'dark' : 'default'}' });
+    }
+  </script>
+</body>
+</html>`;
+
+    const blob = new Blob([standaloneHtml], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${activeDoc.title.replace(/\.md$/, '')}.html`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast(`Exported ${link.download}`);
+  };
+
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -720,14 +784,25 @@ export default function App() {
             <Upload className="w-3.5 h-3.5 opacity-80" />
           </button>
 
-          {/* Export Button */}
+          {/* Export Markdown Button */}
           <button
             onClick={handleDownload}
             className="flex items-center space-x-1 px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[11px] shadow-sm transition-colors"
             title="Export .md (Ctrl+S)"
           >
             <Download className="w-3 h-3" />
-            <span className="hidden md:inline">Export</span>
+            <span className="hidden md:inline">.md</span>
+          </button>
+
+          {/* Export Standalone HTML Button */}
+          <button
+            onClick={handleDownloadStandaloneHtml}
+            style={{ borderColor: currentTheme.border }}
+            className="flex items-center space-x-1 px-2 py-1 rounded border hover:bg-white/5 text-[11px] font-medium transition-colors"
+            title="Export Standalone Offline HTML"
+          >
+            <FileCheck className="w-3 h-3 text-emerald-400" />
+            <span className="hidden md:inline">HTML</span>
           </button>
 
           {/* Copy Markdown */}
@@ -738,6 +813,16 @@ export default function App() {
             title="Copy Raw Markdown"
           >
             <Copy className="w-3.5 h-3.5 opacity-80" />
+          </button>
+
+          {/* Copy Rendered HTML */}
+          <button
+            onClick={copyHtml}
+            style={{ borderColor: currentTheme.border }}
+            className="p-1.5 rounded border hover:bg-white/5 transition-colors"
+            title="Copy Clean Rendered HTML"
+          >
+            <Code className="w-3.5 h-3.5 opacity-80" />
           </button>
 
           {/* Print/PDF */}

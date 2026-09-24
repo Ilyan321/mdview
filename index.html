@@ -162,8 +162,16 @@
       color: #fafafa;
     }
 
-    /* Print Optimization */
+    /* Print Optimization for Professional PDF Export */
     @media print {
+      @page {
+        margin: 15mm 20mm;
+        size: auto;
+      }
+      body {
+        background: #ffffff !important;
+        color: #1f2328 !important;
+      }
       body * {
         visibility: hidden !important;
       }
@@ -175,8 +183,17 @@
         left: 0;
         top: 0;
         width: 100% !important;
-        background: white !important;
-        color: black !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #ffffff !important;
+        color: #1f2328 !important;
+      }
+      table, pre, blockquote, .gh-alert, .studio-code-block, .mermaid-container {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .code-header button, .no-print {
+        display: none !important;
       }
     }
   </style>
