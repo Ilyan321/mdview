@@ -229,22 +229,34 @@ Design a zero-latency clientside markdown parser and visualizer that renders Git
 
 ---
 
-## 2. System Architecture
+## 2. System Architecture & Component Flow
 
-\`\`\`
-+---------------------+        +--------------------+        +---------------------+
-|  User Raw Input     | -----> |  Marked GFM Parser | -----> |  DOMPurify Sanitizer|
-+---------------------+        +--------------------+        +---------------------+
-                                                                        |
-                                                                        v
-+---------------------+        +--------------------+        +---------------------+
-|  Sync Scroll Engine | <----- |  Virtual DOM Tree  | <----- |  Highlight.js Syntax|
-+---------------------+        +--------------------+        +---------------------+
+\`\`\`mermaid
+flowchart TD
+    A[CodeMirror 6 Engine] -->|Debounced Stream < 8ms| B[Marked GFM Parser]
+    B --> C{Syntax Tokenizer}
+    C -->|Code Blocks| D[Highlight.js Engine]
+    C -->|LaTeX Math| E[KaTeX Math Engine]
+    C -->|Mermaid Specs| F[Mermaid SVG Engine]
+    D --> G[DOMPurify Sanitizer]
+    E --> G
+    F --> G
+    G --> H[GitHub Next Viewport]
 \`\`\`
 
 ---
 
-## 3. Performance Benchmarks
+## 3. Mathematical Typesetting Benchmark
+
+The latency model satisfies:
+
+$$T(n) = \\mathcal{O}(n \\log n) + \\int_{0}^{t} \\lambda(s) ds$$
+
+Where inline speed guarantees: $E = mc^2$ and $\\Delta t < 16\\text{ms}$.
+
+---
+
+## 4. Performance Benchmarks
 
 | Metric | Target | Current | Status |
 | :--- | :---: | :---: | :---: |
