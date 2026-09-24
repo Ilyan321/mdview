@@ -28,10 +28,14 @@ export default function HelpModal({ showHelp, setShowHelp, currentTheme }) {
 
         <div className="space-y-1.5 text-xs">
           {[
+            { key: 'Ctrl + P', desc: 'Quick Open Document Palette' },
+            { key: 'Ctrl + F', desc: 'Find in Editor' },
+            { key: 'Ctrl + H', desc: 'Find & Replace in Editor' },
+            { key: 'Alt + Z', desc: 'Toggle Distraction-Free Zen Mode' },
             { key: 'Ctrl + B', desc: 'Toggle Left Sidebar (Explorer / Outline)' },
             { key: 'Ctrl + S', desc: 'Export / Download active document' },
             { key: 'Tab', desc: 'CodeMirror 2-space soft indent' },
-            { key: 'F1 / ?', desc: 'Toggle Shortcuts Guide' },
+            { key: 'F1', desc: 'Studio Shortcuts Guide' },
           ].map((item, idx) => (
             <div
               key={idx}

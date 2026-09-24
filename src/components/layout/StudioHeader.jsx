@@ -16,6 +16,8 @@ import {
   Printer,
   HelpCircle,
   ShieldCheck,
+  Search,
+  Maximize2,
 } from 'lucide-react';
 
 export default function StudioHeader({
@@ -38,6 +40,8 @@ export default function StudioHeader({
   handleFileUpload,
   setShowHelp,
   setShowPrivacy,
+  setShowQuickOpen,
+  toggleZenMode,
   showToast,
 }) {
   const [showTemplates, setShowTemplates] = useState(false);
@@ -52,7 +56,7 @@ export default function StudioHeader({
         backgroundColor: currentTheme.card,
         borderColor: currentTheme.border,
       }}
-      className="h-12 border-b flex items-center justify-between px-3 z-30 select-none overflow-hidden"
+      className="h-12 border-b flex items-center justify-between px-3 z-30 select-none relative"
     >
       {/* Left: Branding & Breadcrumbs */}
       <div className="flex items-center space-x-2 shrink min-w-0 pr-2">
@@ -94,6 +98,20 @@ export default function StudioHeader({
             {activeDoc?.title}
           </span>
         </div>
+
+        {/* Quick Open Command Trigger */}
+        <button
+          onClick={() => setShowQuickOpen && setShowQuickOpen(true)}
+          style={{ borderColor: currentTheme.border }}
+          className="hidden md:flex items-center space-x-1.5 px-2 py-0.5 rounded border hover:bg-neutral-500/15 text-[11px] opacity-75 hover:opacity-100 transition-colors shrink-0 ml-1"
+          title="Quick Open Documents (Ctrl+P / ⌘P)"
+        >
+          <Search className="w-3 h-3 text-blue-400" />
+          <span className="hidden lg:inline text-[11px]">Quick Open</span>
+          <kbd className="px-1 py-0.2 text-[9px] font-mono bg-neutral-500/20 rounded">
+            Ctrl+P
+          </kbd>
+        </button>
       </div>
 
       {/* Center: Layout View Mode Pills */}
@@ -102,7 +120,7 @@ export default function StudioHeader({
           backgroundColor: currentTheme.bg,
           borderColor: currentTheme.border,
         }}
-        className="hidden md:flex items-center p-0.5 rounded border space-x-0.5 shrink-0"
+        className="hidden lg:flex items-center p-0.5 rounded border space-x-0.5 shrink-0"
       >
         <button
           onClick={() => setViewMode('split')}
@@ -151,30 +169,37 @@ export default function StudioHeader({
           </button>
 
           {showTemplates && (
-            <div
-              style={{
-                backgroundColor: currentTheme.card,
-                borderColor: currentTheme.border,
-              }}
-              className="absolute right-0 mt-1 w-64 rounded-lg shadow-xl border p-1.5 z-50 text-xs"
-            >
-              <div className="text-[10px] font-bold px-2 py-1 opacity-50 uppercase tracking-widest">
-                Load Template into New Tab
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowTemplates(false)}
+              />
+              <div
+                style={{
+                  backgroundColor: currentTheme.card,
+                  borderColor: currentTheme.border,
+                  color: currentTheme.text,
+                }}
+                className="absolute right-0 top-full mt-2 w-64 rounded-xl shadow-2xl border p-1.5 z-50 text-xs backdrop-blur-md"
+              >
+                <div className="text-[10px] font-bold px-2 py-1.5 opacity-50 uppercase tracking-widest border-b border-neutral-500/20 mb-1">
+                  Load Template into New Tab
+                </div>
+                {Object.entries(TEMPLATES).map(([key, t]) => (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      createNewDocument(key);
+                      setShowTemplates(false);
+                    }}
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-blue-600/20 transition-colors"
+                  >
+                    <div className="font-semibold text-blue-400">{t.name}</div>
+                    <div className="text-[10px] opacity-60 truncate">{t.description}</div>
+                  </button>
+                ))}
               </div>
-              {Object.entries(TEMPLATES).map(([key, t]) => (
-                <button
-                  key={key}
-                  onClick={() => {
-                    createNewDocument(key);
-                    setShowTemplates(false);
-                  }}
-                  className="w-full text-left px-2 py-1.5 rounded hover:bg-blue-600/20 transition-colors"
-                >
-                  <div className="font-semibold text-blue-400">{t.name}</div>
-                  <div className="text-[10px] opacity-60 truncate">{t.description}</div>
-                </button>
-              ))}
-            </div>
+            </>
           )}
         </div>
 
@@ -186,46 +211,64 @@ export default function StudioHeader({
               setShowTemplates(false);
             }}
             style={{ borderColor: currentTheme.border }}
-            className="flex items-center space-x-1 px-2 py-1 rounded border hover:bg-neutral-500/15 transition-colors text-[11px]"
-            title="Switch Studio Theme"
+            className="flex items-center space-x-1.5 px-2 py-1 rounded border hover:bg-neutral-500/15 transition-colors text-[11px]"
+            title={`Switch Studio Theme (${currentTheme.name})`}
           >
             <Palette className="w-3 h-3 text-indigo-400" />
-            <span className="hidden lg:inline">{currentTheme.name}</span>
+            <span className="hidden xl:inline font-medium">{currentTheme.name}</span>
+            <span
+              className="w-2.5 h-2.5 rounded-full border border-white/20 shrink-0"
+              style={{ backgroundColor: currentTheme.bg }}
+            />
+            <ChevronDown className="w-2.5 h-2.5 opacity-60" />
           </button>
 
           {showThemes && (
-            <div
-              style={{
-                backgroundColor: currentTheme.card,
-                borderColor: currentTheme.border,
-              }}
-              className="absolute right-0 mt-1 w-52 rounded-lg shadow-xl border p-1.5 z-50 text-xs"
-            >
-              <div className="text-[10px] font-bold px-2 py-1 opacity-50 uppercase tracking-widest">
-                Studio Theme
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowThemes(false)}
+              />
+              <div
+                style={{
+                  backgroundColor: currentTheme.card,
+                  borderColor: currentTheme.border,
+                  color: currentTheme.text,
+                }}
+                className="absolute right-0 top-full mt-2 w-56 rounded-xl shadow-2xl border p-1.5 z-50 text-xs backdrop-blur-md"
+              >
+                <div className="text-[10px] font-bold px-2 py-1.5 opacity-50 uppercase tracking-widest border-b border-neutral-500/20 mb-1 flex items-center justify-between">
+                  <span>Studio Theme</span>
+                  <span className="text-[9px] font-mono opacity-50">WCAG AAA</span>
+                </div>
+                {THEMES.map((th) => (
+                  <button
+                    key={th.id}
+                    onClick={() => {
+                      setCurrentThemeId(th.id);
+                      setShowThemes(false);
+                      showToast(`Theme: ${th.name}`);
+                    }}
+                    className={`w-full text-left px-2.5 py-2 rounded-lg flex items-center justify-between transition-colors ${
+                      currentThemeId === th.id
+                        ? 'bg-blue-600/20 text-blue-400 font-bold'
+                        : 'hover:bg-neutral-500/15 opacity-80 hover:opacity-100'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <span
+                        className="w-3 h-3 rounded-full border border-white/20 shrink-0 shadow-sm"
+                        style={{ backgroundColor: th.bg }}
+                      />
+                      <span className="text-xs">{th.name}</span>
+                    </div>
+                    {currentThemeId === th.id && (
+                      <span className="text-xs text-blue-400 font-bold">✓</span>
+                    )}
+                  </button>
+                ))}
               </div>
-              {THEMES.map((th) => (
-                <button
-                  key={th.id}
-                  onClick={() => {
-                    setCurrentThemeId(th.id);
-                    setShowThemes(false);
-                    showToast(`Theme: ${th.name}`);
-                  }}
-                  className={`w-full text-left px-2 py-1.5 rounded flex items-center justify-between ${
-                    currentThemeId === th.id
-                      ? 'bg-blue-600/20 text-blue-400 font-bold'
-                      : 'hover:bg-neutral-500/10'
-                  }`}
-                >
-                  <span>{th.name}</span>
-                  <span
-                    className="w-2.5 h-2.5 rounded-full border border-white/20"
-                    style={{ backgroundColor: th.bg }}
-                  />
-                </button>
-              ))}
-            </div>
+            </>
           )}
         </div>
 
@@ -271,7 +314,7 @@ export default function StudioHeader({
         <button
           onClick={copyMarkdown}
           style={{ borderColor: currentTheme.border }}
-          className="hidden xl:flex p-1.5 rounded border hover:bg-neutral-500/15 transition-colors"
+          className="hidden 2xl:flex p-1.5 rounded border hover:bg-neutral-500/15 transition-colors"
           title="Copy Raw Markdown"
         >
           <Copy className="w-3.5 h-3.5 opacity-80" />
@@ -281,7 +324,7 @@ export default function StudioHeader({
         <button
           onClick={copyHtml}
           style={{ borderColor: currentTheme.border }}
-          className="hidden xl:flex p-1.5 rounded border hover:bg-neutral-500/15 transition-colors"
+          className="hidden 2xl:flex p-1.5 rounded border hover:bg-neutral-500/15 transition-colors"
           title="Copy Clean Rendered HTML"
         >
           <Code className="w-3.5 h-3.5 opacity-80" />
@@ -306,6 +349,18 @@ export default function StudioHeader({
         >
           <ShieldCheck className="w-3.5 h-3.5" />
         </button>
+
+        {/* Distraction-Free Zen Mode */}
+        {toggleZenMode && (
+          <button
+            onClick={toggleZenMode}
+            style={{ borderColor: currentTheme.border }}
+            className="p-1.5 rounded border hover:bg-neutral-500/15 transition-colors text-amber-400"
+            title="Distraction-Free Zen Mode (Alt+Z)"
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+          </button>
+        )}
 
         {/* Shortcuts Guide */}
         <button

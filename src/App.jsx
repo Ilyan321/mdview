@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { EditorView } from '@codemirror/view';
+import { openSearchPanel, closeSearchPanel, searchPanelOpen } from '@codemirror/search';
+import { Minimize2 } from 'lucide-react';
 import { useDocumentStore } from './hooks/useDocumentStore';
 import { useMarkdownPipeline } from './hooks/useMarkdownPipeline';
 import StudioHeader from './components/layout/StudioHeader';
@@ -11,6 +13,7 @@ import MarkdownPreview from './components/preview/MarkdownPreview';
 import StudioFooter from './components/layout/StudioFooter';
 import HelpModal from './components/modals/HelpModal';
 import PrivacyModal from './components/modals/PrivacyModal';
+import QuickOpenModal from './components/modals/QuickOpenModal';
 import { TEMPLATES } from './templates';
 
 const THEMES = [
@@ -60,6 +63,8 @@ export default function App() {
   });
   const [showHelp, setShowHelp] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showQuickOpen, setShowQuickOpen] = useState(false);
+  const [zenMode, setZenMode] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
 
@@ -141,6 +146,84 @@ export default function App() {
         borderLeftColor: currentTheme.accent,
         borderLeftWidth: '2px',
       },
+      '.cm-panels': {
+        backgroundColor: `${currentTheme.card} !important`,
+        color: `${currentTheme.text} !important`,
+        borderBottom: `1px solid ${currentTheme.border} !important`,
+      },
+      '.cm-panels-top': {
+        borderBottom: `1px solid ${currentTheme.border} !important`,
+      },
+      '.cm-panel.cm-search': {
+        backgroundColor: `${currentTheme.card} !important`,
+        color: `${currentTheme.text} !important`,
+        padding: '6px 12px',
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: '6px',
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+        fontSize: '12px',
+      },
+      '.cm-search input.cm-textfield': {
+        backgroundColor: `${currentTheme.bg} !important`,
+        color: `${currentTheme.text} !important`,
+        border: `1px solid ${currentTheme.border} !important`,
+        borderRadius: '4px',
+        padding: '3px 8px',
+        fontSize: '12px',
+        outline: 'none',
+      },
+      '.cm-search input.cm-textfield:focus': {
+        borderColor: `${currentTheme.accent} !important`,
+        boxShadow: `0 0 0 1px ${currentTheme.accent}`,
+      },
+      '.cm-search button.cm-button': {
+        backgroundColor: currentTheme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08) !important' : 'rgba(0, 0, 0, 0.06) !important',
+        color: `${currentTheme.text} !important`,
+        border: `1px solid ${currentTheme.border} !important`,
+        borderRadius: '4px',
+        padding: '3px 8px',
+        fontSize: '11px',
+        fontWeight: '500',
+        cursor: 'pointer',
+        backgroundImage: 'none !important',
+      },
+      '.cm-search button.cm-button:hover': {
+        backgroundColor: currentTheme.mode === 'dark' ? 'rgba(255, 255, 255, 0.15) !important' : 'rgba(0, 0, 0, 0.12) !important',
+      },
+      '.cm-search label': {
+        color: `${currentTheme.text} !important`,
+        opacity: '0.85',
+        fontSize: '11px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '4px',
+        cursor: 'pointer',
+        marginRight: '6px',
+      },
+      '.cm-search label input[type="checkbox"]': {
+        accentColor: currentTheme.accent,
+      },
+      '.cm-search button[name="close"]': {
+        cursor: 'pointer',
+        padding: '2px 6px',
+        borderRadius: '4px',
+        marginLeft: 'auto',
+        opacity: '0.7',
+      },
+      '.cm-search button[name="close"]:hover': {
+        opacity: '1',
+        backgroundColor: 'rgba(239, 68, 68, 0.2) !important',
+        color: '#ef4444 !important',
+      },
+      '.cm-search-matched': {
+        backgroundColor: currentTheme.mode === 'dark' ? 'rgba(234, 179, 8, 0.35) !important' : 'rgba(250, 204, 21, 0.45) !important',
+        borderRadius: '2px',
+      },
+      '.cm-search-matched.cm-selection': {
+        backgroundColor: currentTheme.mode === 'dark' ? 'rgba(245, 158, 11, 0.7) !important' : 'rgba(217, 119, 6, 0.6) !important',
+      },
     }, { dark: currentTheme.mode === 'dark' });
   }, [currentTheme]);
 
@@ -181,6 +264,24 @@ export default function App() {
     const tableTemplate = `\n| Column 1 | Column 2 | Column 3 |\n| :--- | :---: | ---: |\n| Item Alpha | Active | $120.00 |\n| Item Beta | Inactive | $45.00 |\n\n`;
     insertFormatting('', '', tableTemplate);
   }, [insertFormatting]);
+
+  const toggleSearchPanel = useCallback(() => {
+    if (editorViewRef.current) {
+      if (searchPanelOpen(editorViewRef.current.state)) {
+        closeSearchPanel(editorViewRef.current);
+      } else {
+        openSearchPanel(editorViewRef.current);
+      }
+    }
+  }, []);
+
+  const toggleZenMode = useCallback(() => {
+    setZenMode((prev) => {
+      const next = !prev;
+      showToast(next ? 'Zen Mode activated (Press Esc or Alt+Z to exit)' : 'Zen Mode deactivated');
+      return next;
+    });
+  }, [showToast]);
 
   // --- Synchronized Scrolling ---
   const handleScrollUpdate = useCallback((view) => {
@@ -227,6 +328,25 @@ export default function App() {
   // --- Keyboard Shortcuts ---
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        setShowQuickOpen((prev) => !prev);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        toggleSearchPanel();
+      }
+      if (e.altKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        toggleZenMode();
+      }
+      if (e.key === 'Escape') {
+        if (zenMode) {
+          e.preventDefault();
+          setZenMode(false);
+          showToast('Exited Zen Mode');
+        }
+      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         handleDownload();
@@ -242,7 +362,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeDoc]);
+  }, [activeDoc, handleDownload, toggleSearchPanel, toggleZenMode, zenMode, showToast]);
 
   // --- Export Handlers ---
   const handleDownload = useCallback(() => {
@@ -360,65 +480,96 @@ export default function App() {
       }}
       className="flex flex-col h-screen overflow-hidden selection:bg-blue-600 selection:text-white"
     >
+      {/* FLOATING ZEN MODE EXIT PILL */}
+      {zenMode && (
+        <div className="fixed top-3 right-4 z-40 animate-fade-in">
+          <button
+            onClick={() => setZenMode(false)}
+            style={{
+              backgroundColor: currentTheme.card,
+              borderColor: currentTheme.border,
+              color: currentTheme.text,
+            }}
+            className="flex items-center space-x-2 px-3 py-1.5 rounded-full border shadow-xl hover:bg-neutral-500/15 text-xs opacity-80 hover:opacity-100 transition-all backdrop-blur-md"
+            title="Exit Zen Mode (Esc or Alt+Z)"
+          >
+            <Minimize2 className="w-3.5 h-3.5 text-blue-400" />
+            <span className="font-semibold text-[11px]">Exit Zen</span>
+            <kbd className="px-1.5 py-0.2 text-[9px] font-mono bg-neutral-500/20 rounded opacity-75">
+              Esc
+            </kbd>
+          </button>
+        </div>
+      )}
+
       {/* 1. STUDIO HEADER */}
-      <StudioHeader
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        activeDoc={activeDoc}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        currentTheme={currentTheme}
-        currentThemeId={currentThemeId}
-        setCurrentThemeId={setCurrentThemeId}
-        THEMES={THEMES}
-        TEMPLATES={TEMPLATES}
-        createNewDocument={createNewDocument}
-        handleDownload={handleDownload}
-        handleDownloadStandaloneHtml={handleDownloadStandaloneHtml}
-        copyMarkdown={copyMarkdown}
-        copyHtml={copyHtml}
-        fileInputRef={fileInputRef}
-        handleFileUpload={handleFileUpload}
-        setShowHelp={setShowHelp}
-        setShowPrivacy={setShowPrivacy}
-        showToast={showToast}
-      />
+      {!zenMode && (
+        <StudioHeader
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          activeDoc={activeDoc}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          currentTheme={currentTheme}
+          currentThemeId={currentThemeId}
+          setCurrentThemeId={setCurrentThemeId}
+          THEMES={THEMES}
+          TEMPLATES={TEMPLATES}
+          createNewDocument={createNewDocument}
+          handleDownload={handleDownload}
+          handleDownloadStandaloneHtml={handleDownloadStandaloneHtml}
+          copyMarkdown={copyMarkdown}
+          copyHtml={copyHtml}
+          fileInputRef={fileInputRef}
+          handleFileUpload={handleFileUpload}
+          setShowHelp={setShowHelp}
+          setShowPrivacy={setShowPrivacy}
+          setShowQuickOpen={setShowQuickOpen}
+          toggleZenMode={toggleZenMode}
+          showToast={showToast}
+        />
+      )}
 
       {/* 2. MAIN WORKSPACE BODY */}
       <div className="flex-1 flex overflow-hidden">
         {/* COLLAPSIBLE SIDEBAR */}
-        <StudioSidebar
-          sidebarOpen={sidebarOpen}
-          sidebarTab={sidebarTab}
-          setSidebarTab={setSidebarTab}
-          documents={documents}
-          setDocuments={setDocuments}
-          activeDocId={activeDocId}
-          setActiveDocId={setActiveDocId}
-          createNewDocument={createNewDocument}
-          deleteDocument={deleteDocument}
-          renameDocument={renameDocument}
-          outline={outline}
-          jumpToLine={jumpToLine}
-          currentTheme={currentTheme}
-        />
+        {!zenMode && (
+          <StudioSidebar
+            sidebarOpen={sidebarOpen}
+            sidebarTab={sidebarTab}
+            setSidebarTab={setSidebarTab}
+            documents={documents}
+            setDocuments={setDocuments}
+            activeDocId={activeDocId}
+            setActiveDocId={setActiveDocId}
+            createNewDocument={createNewDocument}
+            deleteDocument={deleteDocument}
+            renameDocument={renameDocument}
+            outline={outline}
+            jumpToLine={jumpToLine}
+            currentTheme={currentTheme}
+          />
+        )}
 
         {/* CENTRAL WORKSPACE (TABS + SPLIT PANE) */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* TAB BAR */}
-          <TabBar
-            documents={documents}
-            activeDocId={activeDocId}
-            setActiveDocId={setActiveDocId}
-            closeDocument={closeDocument}
-            createNewDocument={createNewDocument}
-            currentTheme={currentTheme}
-          />
+          {!zenMode && (
+            <TabBar
+              documents={documents}
+              activeDocId={activeDocId}
+              setActiveDocId={setActiveDocId}
+              closeDocument={closeDocument}
+              createNewDocument={createNewDocument}
+              currentTheme={currentTheme}
+            />
+          )}
 
           {/* FORMATTING TOOLBAR */}
           <EditorToolbar
             insertFormatting={insertFormatting}
             insertTable={insertTable}
+            toggleSearchPanel={toggleSearchPanel}
             syncScroll={syncScroll}
             toggleSyncScroll={toggleSyncScroll}
             currentTheme={currentTheme}
@@ -465,13 +616,15 @@ export default function App() {
       </div>
 
       {/* 3. TELEMETRY STATUS BAR */}
-      <StudioFooter
-        cursorPos={cursorPos}
-        stats={stats}
-        lastSaved={lastSaved}
-        currentTheme={currentTheme}
-        setShowPrivacy={setShowPrivacy}
-      />
+      {!zenMode && (
+        <StudioFooter
+          cursorPos={cursorPos}
+          stats={stats}
+          lastSaved={lastSaved}
+          currentTheme={currentTheme}
+          setShowPrivacy={setShowPrivacy}
+        />
+      )}
 
       {/* TOAST NOTIFICATION */}
       {toastMessage && (
@@ -496,6 +649,16 @@ export default function App() {
         exportAllDocumentsJson={exportAllDocumentsJson}
         importVaultBackupJson={importVaultBackupJson}
         purgeLocalVault={purgeLocalVault}
+      />
+
+      {/* QUICK OPEN FUZZY DOCUMENT SWITCHER (Cmd/Ctrl+P) */}
+      <QuickOpenModal
+        isOpen={showQuickOpen}
+        onClose={() => setShowQuickOpen(false)}
+        documents={documents}
+        activeDocId={activeDocId}
+        onSelectDoc={(id) => setActiveDocId(id)}
+        currentTheme={currentTheme}
       />
     </div>
   );

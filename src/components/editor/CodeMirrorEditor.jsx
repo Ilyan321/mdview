@@ -1,7 +1,8 @@
 import React from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { markdown } from '@codemirror/lang-markdown';
-import { EditorView } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
+import { search, searchKeymap } from '@codemirror/search';
 
 export default function CodeMirrorEditor({
   activeDoc,
@@ -29,6 +30,8 @@ export default function CodeMirrorEditor({
         extensions={[
           markdown(),
           EditorView.lineWrapping,
+          search({ top: true }),
+          keymap.of(searchKeymap),
           cmCustomTheme,
           EditorView.updateListener.of((update) => {
             if (update.view) {

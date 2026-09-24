@@ -9,6 +9,7 @@ import {
   Link as LinkIcon,
   Table as TableIcon,
   CheckSquare,
+  Search,
   Link2,
   Unlink,
 } from 'lucide-react';
@@ -16,6 +17,7 @@ import {
 export default function EditorToolbar({
   insertFormatting,
   insertTable,
+  toggleSearchPanel,
   syncScroll,
   toggleSyncScroll,
   currentTheme,
@@ -104,15 +106,32 @@ export default function EditorToolbar({
         </button>
       </div>
 
-      {/* Independent / Sync Scroll Toggle */}
+      {/* Right controls: In-Editor Search + Independent / Sync Scroll Toggle */}
       <div className="flex items-center space-x-2 text-[11px]">
+        {toggleSearchPanel && (
+          <button
+            type="button"
+            onClick={toggleSearchPanel}
+            style={{ borderColor: currentTheme.border }}
+            className="flex items-center space-x-1.5 px-2 py-0.5 rounded border hover:bg-neutral-500/15 transition-all text-xs"
+            title="Find & Replace in Document (Ctrl+F / Ctrl+H)"
+          >
+            <Search className="w-3 h-3 text-blue-400" />
+            <span className="text-[10px] font-medium hidden sm:inline">Find</span>
+            <kbd className="hidden md:inline px-1 py-0.2 text-[9px] font-mono opacity-60 bg-neutral-500/20 rounded">
+              Ctrl+F
+            </kbd>
+          </button>
+        )}
+
         <button
           type="button"
           onClick={toggleSyncScroll}
+          style={{ borderColor: currentTheme.border }}
           className={`flex items-center space-x-1.5 px-2 py-0.5 rounded border transition-all ${
             syncScroll
-              ? 'bg-blue-600/20 border-blue-500/40 text-blue-400 font-medium'
-              : 'border-white/10 text-white/50 hover:text-white/80 hover:bg-white/5'
+              ? 'bg-blue-600/20 text-blue-400 font-medium'
+              : 'hover:bg-neutral-500/15 opacity-70 hover:opacity-100'
           }`}
           title={
             syncScroll
