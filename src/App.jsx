@@ -10,6 +10,7 @@ import CodeMirrorEditor from './components/editor/CodeMirrorEditor';
 import MarkdownPreview from './components/preview/MarkdownPreview';
 import StudioFooter from './components/layout/StudioFooter';
 import HelpModal from './components/modals/HelpModal';
+import PrivacyModal from './components/modals/PrivacyModal';
 import { TEMPLATES } from './templates';
 
 const THEMES = [
@@ -41,6 +42,9 @@ export default function App() {
     closeDocument,
     deleteDocument,
     renameDocument,
+    exportAllDocumentsJson,
+    importVaultBackupJson,
+    purgeLocalVault,
   } = useDocumentStore(showToast);
 
   // --- UI Layout State ---
@@ -55,6 +59,7 @@ export default function App() {
     return localStorage.getItem('mdview_theme_id') || 'github-dark';
   });
   const [showHelp, setShowHelp] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
 
@@ -369,6 +374,7 @@ export default function App() {
         fileInputRef={fileInputRef}
         handleFileUpload={handleFileUpload}
         setShowHelp={setShowHelp}
+        setShowPrivacy={setShowPrivacy}
         showToast={showToast}
       />
 
@@ -458,6 +464,7 @@ export default function App() {
         stats={stats}
         lastSaved={lastSaved}
         currentTheme={currentTheme}
+        setShowPrivacy={setShowPrivacy}
       />
 
       {/* TOAST NOTIFICATION */}
@@ -473,6 +480,16 @@ export default function App() {
         showHelp={showHelp}
         setShowHelp={setShowHelp}
         currentTheme={currentTheme}
+      />
+
+      {/* PRIVACY & DATA SOVEREIGNTY MODAL */}
+      <PrivacyModal
+        showPrivacy={showPrivacy}
+        setShowPrivacy={setShowPrivacy}
+        currentTheme={currentTheme}
+        exportAllDocumentsJson={exportAllDocumentsJson}
+        importVaultBackupJson={importVaultBackupJson}
+        purgeLocalVault={purgeLocalVault}
       />
     </div>
   );

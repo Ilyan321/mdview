@@ -151,6 +151,22 @@ export function useDocumentStore(showToast) {
     if (showToast) showToast('Reset to default documents');
   }, [showToast]);
 
+  const importVaultBackupJson = useCallback((backupData) => {
+    if (!backupData || !Array.isArray(backupData.documents) || backupData.documents.length === 0) {
+      if (showToast) showToast('Invalid backup file structure', '⚠️');
+      return;
+    }
+    setDocuments(backupData.documents);
+    setActiveDocId(backupData.documents[0].id);
+    if (showToast) showToast(`Restored ${backupData.documents.length} documents from vault backup`);
+  }, [showToast]);
+
+  const purgeLocalVault = useCallback(() => {
+    if (window.confirm('Are you sure you want to wipe all cached documents and reset to defaults? This cannot be undone.')) {
+      resetAllDocuments();
+    }
+  }, [resetAllDocuments]);
+
   return {
     documents,
     setDocuments,
@@ -165,6 +181,8 @@ export function useDocumentStore(showToast) {
     deleteDocument,
     renameDocument,
     exportAllDocumentsJson,
+    importVaultBackupJson,
+    purgeLocalVault,
     resetAllDocuments,
   };
 }

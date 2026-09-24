@@ -15,6 +15,7 @@ import {
   Code,
   Printer,
   HelpCircle,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function StudioHeader({
@@ -36,6 +37,7 @@ export default function StudioHeader({
   fileInputRef,
   handleFileUpload,
   setShowHelp,
+  setShowPrivacy,
   showToast,
 }) {
   const [showTemplates, setShowTemplates] = useState(false);
@@ -288,6 +290,16 @@ export default function StudioHeader({
           title="Print or Export to PDF"
         >
           <Printer className="w-3.5 h-3.5 opacity-80" />
+        </button>
+
+        {/* Privacy, Security & Data Sovereignty */}
+        <button
+          onClick={() => setShowPrivacy && setShowPrivacy(true)}
+          style={{ borderColor: currentTheme.border }}
+          className="p-1.5 rounded border hover:bg-white/5 transition-colors text-emerald-400"
+          title="Privacy, Security & Data Sovereignty"
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
         </button>
 
         {/* Shortcuts Guide */}
