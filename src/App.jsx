@@ -48,7 +48,9 @@ import {
   PanelLeft,
   GitBranch,
   CheckCircle2,
-  FileCheck
+  FileCheck,
+  Link2,
+  Unlink
 } from 'lucide-react';
 import { TEMPLATES } from './templates';
 
@@ -109,7 +111,9 @@ export default function App() {
   const [sidebarTab, setSidebarTab] = useState('explorer'); // 'explorer' | 'outline'
   const [viewMode, setViewMode] = useState('split'); // 'split' | 'editor' | 'preview'
   const [splitRatio, setSplitRatio] = useState(50);
-  const [syncScroll, setSyncScroll] = useState(true);
+  const [syncScroll, setSyncScroll] = useState(() => {
+    return localStorage.getItem('mdview_sync_scroll') === 'true'; // Defaults to false (independent scrolling)
+  });
   const [currentThemeId, setCurrentThemeId] = useState(() => {
     return localStorage.getItem('mdview_theme_id') || 'github-dark';
   });
@@ -458,6 +462,15 @@ export default function App() {
     const scrollPercentage = scroller.scrollTop / (scroller.scrollHeight - scroller.clientHeight || 1);
     preview.scrollTop = scrollPercentage * (preview.scrollHeight - preview.clientHeight);
   }, [syncScroll]);
+
+  const toggleSyncScroll = () => {
+    setSyncScroll((prev) => {
+      const next = !prev;
+      localStorage.setItem('mdview_sync_scroll', String(next));
+      showToast(next ? 'Synchronized scrolling enabled' : 'Independent scrolling enabled');
+      return next;
+    });
+  };
 
   // --- Draggable Split Divider ---
   const handleMouseDown = () => setIsDragging(true);
@@ -1105,17 +1118,31 @@ export default function App() {
               </button>
             </div>
 
-            {/* Sync Scroll Toggle */}
-            <div className="flex items-center space-x-3 text-[11px]">
-              <label className="flex items-center space-x-1.5 cursor-pointer opacity-70 hover:opacity-100">
-                <input
-                  type="checkbox"
-                  checked={syncScroll}
-                  onChange={(e) => setSyncScroll(e.target.checked)}
-                  className="rounded border-gray-600 text-blue-600 focus:ring-0 w-3 h-3"
-                />
-                <span>Sync Scroll</span>
-              </label>
+            {/* Independent / Sync Scroll Toggle */}
+            <div className="flex items-center space-x-2 text-[11px]">
+              <button
+                type="button"
+                onClick={toggleSyncScroll}
+                className={`flex items-center space-x-1.5 px-2 py-0.5 rounded border transition-all ${
+                  syncScroll
+                    ? 'bg-blue-600/20 border-blue-500/40 text-blue-400 font-medium'
+                    : 'border-white/10 text-white/50 hover:text-white/80 hover:bg-white/5'
+                }`}
+                title={
+                  syncScroll
+                    ? 'Scroll sync enabled (panes scroll together). Click for independent scrolling.'
+                    : 'Independent scroll active (panes scroll separately). Click to enable sync.'
+                }
+              >
+                {syncScroll ? (
+                  <Link2 className="w-3 h-3 text-blue-400" />
+                ) : (
+                  <Unlink className="w-3 h-3 opacity-60" />
+                )}
+                <span className="text-[10px] tracking-tight">
+                  {syncScroll ? 'Sync On' : 'Independent'}
+                </span>
+              </button>
             </div>
           </div>
 
