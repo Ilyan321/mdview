@@ -325,45 +325,6 @@ export default function App() {
     };
   }, [isDragging]);
 
-  // --- Keyboard Shortcuts ---
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
-        e.preventDefault();
-        setShowQuickOpen((prev) => !prev);
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
-        e.preventDefault();
-        toggleSearchPanel();
-      }
-      if (e.altKey && e.key.toLowerCase() === 'z') {
-        e.preventDefault();
-        toggleZenMode();
-      }
-      if (e.key === 'Escape') {
-        if (zenMode) {
-          e.preventDefault();
-          setZenMode(false);
-          showToast('Exited Zen Mode');
-        }
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-        handleDownload();
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
-        e.preventDefault();
-        setSidebarOpen((prev) => !prev);
-      }
-      if (e.key === 'F1') {
-        e.preventDefault();
-        setShowHelp((prev) => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeDoc, handleDownload, toggleSearchPanel, toggleZenMode, zenMode, showToast]);
-
   // --- Export Handlers ---
   const handleDownload = useCallback(() => {
     const blob = new Blob([activeDoc.content], { type: 'text/markdown;charset=utf-8' });
@@ -471,6 +432,45 @@ export default function App() {
     reader.readAsText(file);
     e.target.value = '';
   }, [setDocuments, setActiveDocId, showToast]);
+
+  // --- Keyboard Shortcuts ---
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        setShowQuickOpen((prev) => !prev);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        toggleSearchPanel();
+      }
+      if (e.altKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        toggleZenMode();
+      }
+      if (e.key === 'Escape') {
+        if (zenMode) {
+          e.preventDefault();
+          setZenMode(false);
+          showToast('Exited Zen Mode');
+        }
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleDownload();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setSidebarOpen((prev) => !prev);
+      }
+      if (e.key === 'F1') {
+        e.preventDefault();
+        setShowHelp((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeDoc, handleDownload, toggleSearchPanel, toggleZenMode, zenMode, showToast]);
 
   return (
     <div
