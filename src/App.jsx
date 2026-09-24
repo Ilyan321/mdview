@@ -4,7 +4,7 @@ import { markdown } from '@codemirror/lang-markdown';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { EditorView } from '@codemirror/view';
 import { marked } from 'marked';
-import hljs from 'highlight.js';
+import hljs from './utils/highlightConfig';
 import DOMPurify from 'dompurify';
 import katex from 'katex';
 import {
