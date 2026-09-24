@@ -1,5 +1,5 @@
-import React from 'react';
-import { GitBranch, CheckCircle2, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { GitBranch, CheckCircle2, ShieldCheck, Wifi, WifiOff } from 'lucide-react';
 
 export default function StudioFooter({
   cursorPos,
@@ -8,6 +8,18 @@ export default function StudioFooter({
   currentTheme,
   setShowPrivacy,
 }) {
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
   const isDark = currentTheme.mode === 'dark';
   const activeTextColor = isDark ? 'text-blue-400' : 'text-blue-600';
 
@@ -46,6 +58,27 @@ export default function StudioFooter({
           <ShieldCheck className="w-3 h-3 text-emerald-400" />
           <span>Local-First • Zero Cookies</span>
         </button>
+
+        {/* PWA Offline Readiness Badge */}
+        <span
+          className={`hidden md:flex items-center space-x-1 text-[10px] font-sans font-medium px-1.5 py-0.2 rounded border transition-colors shrink-0 ${
+            isOnline
+              ? 'text-blue-400 border-blue-500/30 bg-blue-500/10'
+              : 'text-amber-400 border-amber-500/30 bg-amber-500/10'
+          }`}
+          title={
+            isOnline
+              ? 'PWA Offline Ready: App shell and assets cached for offline use'
+              : 'Offline Mode: Operating from local service worker cache'
+          }
+        >
+          {isOnline ? (
+            <Wifi className="w-2.5 h-2.5" />
+          ) : (
+            <WifiOff className="w-2.5 h-2.5 text-amber-400 animate-pulse" />
+          )}
+          <span>{isOnline ? 'Offline Ready' : 'Offline'}</span>
+        </span>
       </div>
 
       {/* Right Telemetry */}
