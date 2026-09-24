@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import CodeMirror from '@uiw/react-codemirror';
+import { markdown } from '@codemirror/lang-markdown';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { EditorView } from '@codemirror/view';
 import { marked } from 'marked';
 import hljs from 'highlight.js';
 import DOMPurify from 'dompurify';
@@ -29,7 +33,6 @@ import {
   HelpCircle,
   ExternalLink,
   ChevronDown,
-  ChevronRight,
   Palette,
   X,
   Zap,
@@ -43,9 +46,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   GitBranch,
-  Save,
-  CheckCircle2,
-  FileCheck
+  CheckCircle2
 } from 'lucide-react';
 import { TEMPLATES } from './templates';
 
@@ -119,9 +120,8 @@ export default function App() {
   const [lastSaved, setLastSaved] = useState(new Date());
 
   // --- Refs ---
-  const editorRef = useRef(null);
+  const editorViewRef = useRef(null);
   const previewRef = useRef(null);
-  const lineNumbersRef = useRef(null);
   const fileInputRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -162,22 +162,51 @@ export default function App() {
     }
   }, [currentTheme]);
 
+  // --- Custom CodeMirror Theme Generator ---
+  const cmCustomTheme = useMemo(() => {
+    return EditorView.theme({
+      '&': {
+        height: '100%',
+        backgroundColor: 'transparent !important',
+        color: currentTheme.text,
+        fontSize: '13.5px',
+        fontFamily: "'JetBrains Mono', Menlo, Consolas, monospace",
+      },
+      '.cm-content': {
+        fontFamily: "'JetBrains Mono', Menlo, Consolas, monospace",
+        padding: '16px 8px',
+        caretColor: currentTheme.accent,
+      },
+      '.cm-gutters': {
+        backgroundColor: currentTheme.mode === 'dark' ? '#090d12' : '#f0f3f6',
+        color: currentTheme.mode === 'dark' ? '#484f58' : '#8c959f',
+        borderRight: `1px solid ${currentTheme.border}`,
+        userSelect: 'none',
+      },
+      '.cm-activeLine': {
+        backgroundColor: currentTheme.mode === 'dark' ? 'rgba(56, 139, 253, 0.08)' : 'rgba(9, 105, 218, 0.05)',
+      },
+      '.cm-activeLineGutter': {
+        backgroundColor: 'transparent',
+        color: currentTheme.accent,
+        fontWeight: 'bold',
+      },
+      '.cm-selectionBackground, ::selection': {
+        backgroundColor: currentTheme.mode === 'dark' ? 'rgba(56, 139, 253, 0.35) !important' : 'rgba(9, 105, 218, 0.2) !important',
+      },
+      '.cm-cursor': {
+        borderLeftColor: currentTheme.accent,
+        borderLeftWidth: '2px',
+      },
+    }, { dark: currentTheme.mode === 'dark' });
+  }, [currentTheme]);
+
   // --- Document Operations ---
   const updateActiveContent = (newContent) => {
     setDocuments((prev) =>
       prev.map((doc) =>
         doc.id === activeDoc.id
           ? { ...doc, content: newContent, isModified: true }
-          : doc
-      )
-    );
-  };
-
-  const updateActiveTitle = (newTitle) => {
-    setDocuments((prev) =>
-      prev.map((doc) =>
-        doc.id === activeDoc.id
-          ? { ...doc, title: newTitle }
           : doc
       )
     );
@@ -243,17 +272,15 @@ export default function App() {
 
   // Jump to heading in editor & preview
   const jumpToLine = (lineNumber) => {
-    if (!editorRef.current) return;
-    const textarea = editorRef.current;
-    const lines = textarea.value.split('\n');
-    let targetIndex = 0;
-    for (let i = 0; i < lineNumber - 1; i++) {
-      targetIndex += lines[i].length + 1;
+    if (editorViewRef.current) {
+      const view = editorViewRef.current;
+      const line = view.state.doc.line(Math.min(lineNumber, view.state.doc.lines));
+      view.dispatch({
+        selection: { anchor: line.from },
+        scrollIntoView: true,
+      });
+      view.focus();
     }
-    textarea.focus();
-    textarea.setSelectionRange(targetIndex, targetIndex);
-    const lineHeight = 24;
-    textarea.scrollTop = Math.max(0, (lineNumber - 4) * lineHeight);
   };
 
   // --- Preprocess GitHub Callout Alerts ---
@@ -286,7 +313,7 @@ export default function App() {
     );
   };
 
-  // --- Markdown Parser ---
+  // --- Markdown Parser with Highlight.js ---
   const parsedHtml = useMemo(() => {
     try {
       const processed = preprocessGitHubAlerts(activeDoc?.content || '');
@@ -323,40 +350,24 @@ export default function App() {
     return { words, chars, lines, readingTime };
   }, [activeDoc?.content]);
 
-  // --- Cursor Tracking ---
-  const handleEditorKeyUp = (e) => {
-    const textarea = e.target;
-    const start = textarea.selectionStart;
-    const textBefore = textarea.value.substring(0, start);
-    const line = textBefore.split('\n').length;
-    const col = start - textBefore.lastIndexOf('\n');
-    setCursorPos({ line, col });
-  };
-
   // --- Formatting Helpers ---
   const insertFormatting = (prefix, suffix = '', defaultPlaceholder = 'text') => {
-    const textarea = editorRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const content = activeDoc.content;
-    const selectedText = content.substring(start, end) || defaultPlaceholder;
-
-    const before = content.substring(0, start);
-    const after = content.substring(end);
+    if (!editorViewRef.current) return;
+    const view = editorViewRef.current;
+    const state = view.state;
+    const selection = state.selection.main;
+    const selectedText = state.sliceDoc(selection.from, selection.to) || defaultPlaceholder;
 
     const replacement = `${prefix}${selectedText}${suffix}`;
-    const newContent = `${before}${replacement}${after}`;
-    updateActiveContent(newContent);
-
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(
-        start + prefix.length,
-        start + prefix.length + selectedText.length
-      );
-    }, 10);
+    view.dispatch({
+      changes: { from: selection.from, to: selection.to, insert: replacement },
+      selection: {
+        anchor: selection.from + prefix.length,
+        head: selection.from + prefix.length + selectedText.length,
+      },
+      scrollIntoView: true,
+    });
+    view.focus();
   };
 
   const insertTable = () => {
@@ -365,20 +376,13 @@ export default function App() {
   };
 
   // --- Synchronized Scrolling ---
-  const handleEditorScroll = () => {
-    if (!editorRef.current) return;
-    const editor = editorRef.current;
-
-    if (lineNumbersRef.current) {
-      lineNumbersRef.current.scrollTop = editor.scrollTop;
-    }
-
-    if (syncScroll && previewRef.current) {
-      const preview = previewRef.current;
-      const scrollPercentage = editor.scrollTop / (editor.scrollHeight - editor.clientHeight || 1);
-      preview.scrollTop = scrollPercentage * (preview.scrollHeight - preview.clientHeight);
-    }
-  };
+  const handleScrollUpdate = useCallback((view) => {
+    if (!syncScroll || !previewRef.current) return;
+    const scroller = view.scrollDOM;
+    const preview = previewRef.current;
+    const scrollPercentage = scroller.scrollTop / (scroller.scrollHeight - scroller.clientHeight || 1);
+    preview.scrollTop = scrollPercentage * (preview.scrollHeight - preview.clientHeight);
+  }, [syncScroll]);
 
   // --- Draggable Split Divider ---
   const handleMouseDown = () => setIsDragging(true);
@@ -404,7 +408,7 @@ export default function App() {
     };
   }, [isDragging]);
 
-  // --- Download File ---
+  // --- Export Actions ---
   const handleDownload = () => {
     const blob = new Blob([activeDoc.content], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -451,22 +455,6 @@ export default function App() {
       showToast(`Imported ${file.name}`);
     };
     reader.readAsText(file);
-  };
-
-  // Keyboard Shortcuts
-  const handleKeyDown = (e) => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      insertFormatting('  ', '', '');
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      e.preventDefault();
-      handleDownload();
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-      e.preventDefault();
-      setSidebarOpen((prev) => !prev);
-    }
   };
 
   return (
@@ -555,7 +543,7 @@ export default function App() {
 
         {/* Right: Actions & Theme Picker */}
         <div className="flex items-center space-x-1">
-          {/* Templates Dropdown */}
+          {/* Presets */}
           <div className="relative">
             <button
               onClick={() => {
@@ -977,42 +965,53 @@ export default function App() {
             ref={containerRef}
             className="flex-1 flex overflow-hidden relative"
           >
-            {/* LEFT PANE: Editor */}
+            {/* LEFT PANE: CodeMirror 6 Editor */}
             {(viewMode === 'split' || viewMode === 'editor') && (
               <div
                 style={{
                   width: viewMode === 'split' ? `${splitRatio}%` : '100%',
                 }}
-                className="h-full flex relative overflow-hidden bg-transparent"
+                className="h-full flex flex-col relative overflow-hidden bg-transparent"
               >
-                {/* Line Numbers Gutter */}
-                <div
-                  ref={lineNumbersRef}
-                  style={{
-                    backgroundColor: currentTheme.mode === 'dark' ? '#07090e' : '#f0f3f6',
-                    borderColor: currentTheme.border,
-                  }}
-                  className="w-12 select-none text-right pr-2.5 py-4 font-mono text-xs overflow-hidden leading-relaxed shrink-0 border-r opacity-50"
-                >
-                  {Array.from({ length: stats.lines }).map((_, i) => (
-                    <div key={i} className="h-6 leading-6">
-                      {i + 1}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Textarea */}
-                <textarea
-                  ref={editorRef}
+                <CodeMirror
                   value={activeDoc.content}
-                  onChange={(e) => updateActiveContent(e.target.value)}
-                  onKeyUp={handleEditorKeyUp}
-                  onClick={handleEditorKeyUp}
-                  onScroll={handleEditorScroll}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Paste or type GitHub Flavored Markdown here..."
-                  spellCheck={false}
-                  className="flex-1 h-full w-full p-4 font-mono text-sm leading-6 resize-none focus:outline-none overflow-y-auto selection:bg-blue-600 selection:text-white bg-transparent"
+                  height="100%"
+                  className="h-full flex-1 overflow-auto"
+                  extensions={[
+                    markdown(),
+                    EditorView.lineWrapping,
+                    cmCustomTheme,
+                    EditorView.updateListener.of((update) => {
+                      if (update.view) {
+                        editorViewRef.current = update.view;
+                      }
+                      if (update.selectionSet) {
+                        const pos = update.state.selection.main.head;
+                        const line = update.state.doc.lineAt(pos);
+                        setCursorPos({
+                          line: line.number,
+                          col: pos - line.from + 1,
+                        });
+                      }
+                      if (update.docChanged) {
+                        updateActiveContent(update.state.doc.toString());
+                      }
+                      handleScrollUpdate(update.view);
+                    }),
+                  ]}
+                  onCreateEditor={(view) => {
+                    editorViewRef.current = view;
+                  }}
+                  basicSetup={{
+                    lineNumbers: true,
+                    highlightActiveLineGutter: true,
+                    highlightActiveLine: true,
+                    foldGutter: true,
+                    bracketMatching: true,
+                    closeBrackets: true,
+                    autocompletion: true,
+                    indentOnInput: true,
+                  }}
                 />
               </div>
             )}
@@ -1068,6 +1067,9 @@ export default function App() {
           <span>
             Ln {cursorPos.line}, Col {cursorPos.col}
           </span>
+          <span className="text-[10px] px-1 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            CodeMirror 6
+          </span>
         </div>
 
         {/* Right Telemetry */}
@@ -1118,7 +1120,7 @@ export default function App() {
               {[
                 { key: 'Ctrl + B', desc: 'Toggle Left Sidebar (Explorer / Outline)' },
                 { key: 'Ctrl + S', desc: 'Export / Download active document' },
-                { key: 'Tab', desc: 'Insert 2-space soft indent' },
+                { key: 'Tab', desc: 'CodeMirror 2-space soft indent' },
                 { key: 'F1 / ?', desc: 'Toggle Shortcuts Guide' },
               ].map((item, idx) => (
                 <div key={idx} className="flex items-center justify-between py-1 border-b border-white/5">
