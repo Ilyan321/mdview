@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚡ mdview — Modern GitHub Markdown Editor & Visualizer</title>
+  
+  <!-- Modern Typography: Inter + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN with full configuration -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Menlo', 'monospace'],
+          },
+          colors: {
+            gh: {
+              darkBg: '#0d1117',
+              darkCard: '#161b22',
+              darkBorder: '#30363d',
+              darkHeader: '#010409',
+              darkText: '#e6edf3',
+              darkMuted: '#8b949e',
+              darkAccent: '#2f81f7',
+              lightBg: '#ffffff',
+              lightCard: '#f6f8fa',
+              lightBorder: '#d0d7de',
+              lightText: '#1f2328',
+              lightMuted: '#656d76',
+              lightAccent: '#0969da',
+            }
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.2s ease-out',
+            'slide-up': 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+            'pulse-glow': 'pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(12px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            pulseGlow: {
+              '0%, 100%': { opacity: '1', filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))' },
+              '50%': { opacity: '0.6', filter: 'drop-shadow(0 0 2px rgba(59, 130, 246, 0.2))' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- GitHub Markdown CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.0/github-markdown.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hljs-theme" />
+
+  <style>
+    /* Sleek Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #30363d;
+      border-radius: 9999px;
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
+      background: #58a6ff;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #d0d7de;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #0969da;
+    }
+
+    /* Markdown Container */
+    .markdown-body {
+      box-sizing: border-box;
+      min-width: 200px;
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 36px 40px;
+      background-color: transparent !important;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* GitHub Admonition Alerts */
+    .gh-alert {
+      padding: 14px 18px;
+      margin: 20px 0;
+      border-left: 4px solid;
+      border-radius: 8px;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s ease;
+    }
+    .gh-alert:hover {
+      transform: translateX(2px);
+    }
+    .gh-alert-note {
+      border-color: #2f81f7;
+      background: rgba(56, 139, 253, 0.08);
+    }
+    .gh-alert-tip {
+      border-color: #3fb950;
+      background: rgba(46, 160, 67, 0.08);
+    }
+    .gh-alert-important {
+      border-color: #a371f7;
+      background: rgba(163, 113, 247, 0.08);
+    }
+    .gh-alert-warning {
+      border-color: #d29922;
+      background: rgba(187, 128, 9, 0.08);
+    }
+    .gh-alert-caution {
+      border-color: #f85149;
+      background: rgba(248, 81, 73, 0.08);
+    }
+
+    /* Theme Styles */
+    body.theme-dracula {
+      --gh-bg: #282a36;
+      --gh-card: #1e1f29;
+      --gh-border: #44475a;
+      background-color: #282a36;
+      color: #f8f8f2;
+    }
+    body.theme-tokyo {
+      --gh-bg: #1a1b26;
+      --gh-card: #16161e;
+      --gh-border: #292e42;
+      background-color: #1a1b26;
+      color: #c0caf5;
+    }
+    body.theme-cyberpunk {
+      --gh-bg: #09090b;
+      --gh-card: #121216;
+      --gh-border: #27272a;
+      background-color: #09090b;
+      color: #fafafa;
+    }
+
+    /* Print Optimization */
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #print-container, #print-container * {
+        visibility: visible !important;
+      }
+      #print-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100% !important;
+        background: white !important;
+        color: black !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gh-darkBg text-gh-darkText font-sans h-screen overflow-hidden antialiased selection:bg-blue-600 selection:text-white">
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
