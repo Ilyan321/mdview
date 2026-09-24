@@ -85,13 +85,19 @@ export default function App() {
     const root = document.documentElement;
     if (currentTheme.mode === 'dark') {
       root.classList.add('dark');
+      root.classList.remove('light');
+      root.setAttribute('data-color-mode', 'dark');
+      root.setAttribute('data-dark-theme', currentTheme.id === 'github-dark-hc' ? 'dark_high_contrast' : 'dark');
     } else {
       root.classList.remove('dark');
+      root.classList.add('light');
+      root.setAttribute('data-color-mode', 'light');
+      root.setAttribute('data-light-theme', 'light');
     }
 
     const hljsLink = document.getElementById('hljs-theme');
     if (hljsLink) {
-      if (currentTheme.id === 'github-light') {
+      if (currentTheme.mode === 'light') {
         hljsLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
       } else {
         hljsLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css';

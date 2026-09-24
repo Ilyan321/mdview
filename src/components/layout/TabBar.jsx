@@ -9,6 +9,9 @@ export default function TabBar({
   createNewDocument,
   currentTheme,
 }) {
+  const isDark = currentTheme.mode === 'dark';
+  const activeTextColor = isDark ? 'text-blue-400' : 'text-blue-600';
+
   return (
     <div
       style={{
@@ -27,19 +30,19 @@ export default function TabBar({
               backgroundColor: isActive ? currentTheme.card : 'transparent',
               borderColor: currentTheme.border,
             }}
-            className={`h-full flex items-center space-x-2 px-3 text-xs font-mono border-r border-t cursor-pointer transition-colors relative ${
+            className={`h-full flex items-center space-x-2 px-3 text-xs font-mono border-r border-t cursor-pointer transition-colors relative shrink-0 ${
               isActive
-                ? 'text-blue-400 font-semibold border-t-2 border-t-blue-500'
+                ? `${activeTextColor} font-semibold border-t-2 border-t-blue-500`
                 : 'border-t-transparent opacity-60 hover:opacity-100'
             }`}
           >
-            <FileText className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate max-w-[120px]">{doc.title}</span>
+            <FileText className="w-3.5 h-3.5 shrink-0 opacity-70" />
+            <span className="truncate max-w-[130px]">{doc.title}</span>
 
             {/* Close Tab Button */}
             <button
               onClick={(e) => closeDocument(doc.id, e)}
-              className="p-0.5 rounded hover:bg-white/10 opacity-60 hover:opacity-100"
+              className="p-0.5 rounded hover:bg-neutral-500/20 opacity-60 hover:opacity-100 transition-colors"
               title="Close tab"
             >
               <X className="w-3 h-3" />
@@ -51,7 +54,7 @@ export default function TabBar({
       {/* Add Tab Button */}
       <button
         onClick={() => createNewDocument()}
-        className="p-1.5 ml-1 rounded hover:bg-white/10 opacity-70 hover:opacity-100 text-blue-400"
+        className={`p-1.5 ml-1 rounded hover:bg-neutral-500/20 opacity-70 hover:opacity-100 ${activeTextColor} transition-colors shrink-0`}
         title="Add New Document"
       >
         <Plus className="w-3.5 h-3.5" />

@@ -17,6 +17,9 @@ export default function StudioSidebar({
 }) {
   if (!sidebarOpen) return null;
 
+  const isDark = currentTheme.mode === 'dark';
+  const activeTextColor = isDark ? 'text-blue-400' : 'text-blue-600';
+
   return (
     <aside
       style={{
@@ -34,7 +37,7 @@ export default function StudioSidebar({
           onClick={() => setSidebarTab('explorer')}
           className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
             sidebarTab === 'explorer'
-              ? 'bg-white/10 text-blue-400'
+              ? `bg-neutral-500/15 ${activeTextColor}`
               : 'opacity-60 hover:opacity-100'
           }`}
         >
@@ -45,7 +48,7 @@ export default function StudioSidebar({
           onClick={() => setSidebarTab('outline')}
           className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
             sidebarTab === 'outline'
-              ? 'bg-white/10 text-blue-400'
+              ? `bg-neutral-500/15 ${activeTextColor}`
               : 'opacity-60 hover:opacity-100'
           }`}
         >
@@ -59,7 +62,7 @@ export default function StudioSidebar({
         {sidebarTab === 'explorer' && (
           <button
             onClick={() => createNewDocument()}
-            className="p-1 rounded hover:bg-white/10 text-blue-400"
+            className={`p-1 rounded hover:bg-neutral-500/20 ${activeTextColor} transition-colors`}
             title="New File"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -83,15 +86,16 @@ export default function StudioSidebar({
                   onClick={() => setActiveDocId(doc.id)}
                   className={`group flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition-colors ${
                     isActive
-                      ? 'bg-blue-600/15 text-blue-400 font-semibold border border-blue-500/30'
-                      : 'hover:bg-white/5 opacity-80 hover:opacity-100'
+                      ? `bg-blue-600/15 ${activeTextColor} font-semibold border border-blue-500/30`
+                      : 'hover:bg-neutral-500/10 opacity-80 hover:opacity-100'
                   }`}
                 >
-                  <div className="flex items-center space-x-2 truncate">
+                  <div className="flex items-center space-x-2 truncate flex-1 min-w-0 pr-1">
                     <FileCode className="w-3.5 h-3.5 shrink-0 opacity-70" />
                     <input
                       type="text"
                       value={doc.title}
+                      style={{ color: currentTheme.text }}
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) => {
                         const title = e.target.value;
@@ -99,15 +103,15 @@ export default function StudioSidebar({
                           prev.map((d) => (d.id === doc.id ? { ...d, title } : d))
                         );
                       }}
-                      className="bg-transparent focus:outline-none focus:border-b focus:border-blue-400 truncate max-w-[130px]"
+                      className="bg-transparent focus:outline-none focus:border-b focus:border-blue-400 truncate w-full"
                     />
                   </div>
 
-                  <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     {documents.length > 1 && (
                       <button
                         onClick={(e) => deleteDocument(doc.id, e)}
-                        className="p-0.5 rounded hover:text-red-400"
+                        className="p-0.5 rounded hover:text-red-400 hover:bg-neutral-500/10 transition-colors"
                         title="Delete file"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -134,10 +138,12 @@ export default function StudioSidebar({
                   key={idx}
                   onClick={() => jumpToLine(item.lineNumber)}
                   style={{ paddingLeft: `${(item.level - 1) * 12 + 8}px` }}
-                  className="w-full text-left py-1 pr-2 rounded hover:bg-white/5 truncate flex items-center space-x-1.5 opacity-80 hover:opacity-100 hover:text-blue-400 transition-colors"
+                  className={`w-full text-left py-1 pr-2 rounded hover:bg-neutral-500/10 truncate flex items-center space-x-1.5 opacity-80 hover:opacity-100 hover:${activeTextColor} transition-colors`}
                   title={`Jump to Ln ${item.lineNumber}`}
                 >
-                  <span className="text-[10px] opacity-50 font-bold">H{item.level}</span>
+                  <span className="text-[10px] opacity-50 font-bold shrink-0">
+                    H{item.level}
+                  </span>
                   <span className="truncate">{item.text}</span>
                 </button>
               ))
