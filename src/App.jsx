@@ -544,7 +544,6 @@ export default function App() {
             setActiveDocId={setActiveDocId}
             createNewDocument={createNewDocument}
             deleteDocument={deleteDocument}
-            renameDocument={renameDocument}
             outline={outline}
             jumpToLine={jumpToLine}
             currentTheme={currentTheme}
