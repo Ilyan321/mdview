@@ -3,10 +3,8 @@ import CodeMirror from '@uiw/react-codemirror';
 import { markdown } from '@codemirror/lang-markdown';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { EditorView } from '@codemirror/view';
-import { marked } from 'marked';
-import hljs from './utils/highlightConfig';
-import DOMPurify from 'dompurify';
-import katex from 'katex';
+import { useDocumentStore } from './hooks/useDocumentStore';
+import { useMarkdownPipeline } from './hooks/useMarkdownPipeline';
 import {
   Columns,
   Eye,
@@ -61,50 +59,31 @@ const THEMES = [
   { id: 'github-light', name: 'GitHub Light', mode: 'light', bg: '#ffffff', card: '#f6f8fa', border: '#d0d7de', accent: '#0969da', text: '#1f2328' },
 ];
 
-const INITIAL_DOCS = [
-  {
-    id: 'doc-1',
-    title: 'README.md',
-    content: TEMPLATES.readme.content,
-    isModified: false,
-  },
-  {
-    id: 'doc-2',
-    title: 'ARCHITECTURE.md',
-    content: TEMPLATES.spec.content,
-    isModified: false,
-  },
-  {
-    id: 'doc-3',
-    title: 'SHOWCASE.md',
-    content: TEMPLATES.showcase.content,
-    isModified: false,
-  }
-];
-
 export default function App() {
-  // --- Multi-Document State ---
-  const [documents, setDocuments] = useState(() => {
-    try {
-      const saved = localStorage.getItem('mdview_studio_docs');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    return INITIAL_DOCS;
-  });
+  // --- Toast Notifications ---
+  const [toastMessage, setToastMessage] = useState(null);
+  const showToast = useCallback((msg, icon = '✓') => {
+    setToastMessage({ text: msg, icon });
+    setTimeout(() => setToastMessage(null), 2400);
+  }, []);
 
-  const [activeDocId, setActiveDocId] = useState(() => {
-    return localStorage.getItem('mdview_active_doc_id') || 'doc-1';
-  });
-
-  // --- Active Document Helper ---
-  const activeDoc = useMemo(() => {
-    return documents.find((d) => d.id === activeDocId) || documents[0] || INITIAL_DOCS[0];
-  }, [documents, activeDocId]);
+  // --- Document Store Hook ---
+  const {
+    documents,
+    setDocuments,
+    activeDocId,
+    setActiveDocId,
+    activeDoc,
+    lastSaved,
+    stats,
+    updateActiveContent,
+    createNewDocument,
+    closeDocument,
+    deleteDocument,
+    renameDocument,
+    exportAllDocumentsJson,
+    resetAllDocuments
+  } = useDocumentStore(showToast);
 
   // --- UI State ---
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -121,9 +100,7 @@ export default function App() {
   const [showThemes, setShowThemes] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [toastMessage, setToastMessage] = useState(null);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
-  const [lastSaved, setLastSaved] = useState(new Date());
 
   // --- Refs ---
   const editorViewRef = useRef(null);
@@ -135,19 +112,12 @@ export default function App() {
     return THEMES.find((t) => t.id === currentThemeId) || THEMES[0];
   }, [currentThemeId]);
 
-  // --- Toast Notifications ---
-  const showToast = (msg, icon = '✓') => {
-    setToastMessage({ text: msg, icon });
-    setTimeout(() => setToastMessage(null), 2400);
-  };
+  // --- Markdown Pipeline Hook ---
+  const { parsedHtml, outline } = useMarkdownPipeline(activeDoc?.content, currentTheme, previewRef);
 
-  // --- Auto-Save to LocalStorage ---
   useEffect(() => {
-    localStorage.setItem('mdview_studio_docs', JSON.stringify(documents));
-    localStorage.setItem('mdview_active_doc_id', activeDocId);
     localStorage.setItem('mdview_theme_id', currentThemeId);
-    setLastSaved(new Date());
-  }, [documents, activeDocId, currentThemeId]);
+  }, [currentThemeId]);
 
   // --- Theme Syncing ---
   useEffect(() => {
@@ -207,75 +177,6 @@ export default function App() {
     }, { dark: currentTheme.mode === 'dark' });
   }, [currentTheme]);
 
-  // --- Document Operations ---
-  const updateActiveContent = (newContent) => {
-    setDocuments((prev) =>
-      prev.map((doc) =>
-        doc.id === activeDoc.id
-          ? { ...doc, content: newContent, isModified: true }
-          : doc
-      )
-    );
-  };
-
-  const createNewDocument = (templateKey = null) => {
-    const tmpl = templateKey ? TEMPLATES[templateKey] : null;
-    const newId = `doc-${Date.now()}`;
-    const newDoc = {
-      id: newId,
-      title: tmpl ? `${tmpl.name.toLowerCase().replace(/\s+/g, '-')}.md` : `untitled-${documents.length + 1}.md`,
-      content: tmpl ? tmpl.content : '# Untitled Document\n\nStart typing markdown here...',
-      isModified: false,
-    };
-    setDocuments((prev) => [...prev, newDoc]);
-    setActiveDocId(newId);
-    setShowTemplates(false);
-    showToast(`Created ${newDoc.title}`);
-  };
-
-  const closeDocument = (docId, e) => {
-    e.stopPropagation();
-    if (documents.length <= 1) {
-      showToast('Cannot close the last open document', 'ℹ️');
-      return;
-    }
-    const filtered = documents.filter((d) => d.id !== docId);
-    setDocuments(filtered);
-    if (activeDocId === docId) {
-      setActiveDocId(filtered[filtered.length - 1].id);
-    }
-  };
-
-  const deleteDocument = (docId, e) => {
-    e.stopPropagation();
-    if (documents.length <= 1) {
-      showToast('Cannot delete the last document', 'ℹ️');
-      return;
-    }
-    const docToDelete = documents.find((d) => d.id === docId);
-    if (confirm(`Delete "${docToDelete?.title}"?`)) {
-      closeDocument(docId, e);
-      showToast(`Deleted ${docToDelete?.title}`);
-    }
-  };
-
-  // --- Live Outline Extraction ---
-  const outline = useMemo(() => {
-    const lines = (activeDoc?.content || '').split('\n');
-    const items = [];
-    lines.forEach((line, index) => {
-      const match = line.match(/^(#{1,6})\s+(.*)$/);
-      if (match) {
-        items.push({
-          level: match[1].length,
-          text: match[2].trim(),
-          lineNumber: index + 1,
-        });
-      }
-    });
-    return items;
-  }, [activeDoc?.content]);
-
   // Jump to heading in editor & preview
   const jumpToLine = (lineNumber) => {
     if (editorViewRef.current) {
@@ -288,146 +189,6 @@ export default function App() {
       view.focus();
     }
   };
-
-  // --- Preprocess GitHub Callout Alerts ---
-  const preprocessGitHubAlerts = (md) => {
-    return md.replace(
-      /^>\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*\n((?:>.*(?:\n|$))*)/gim,
-      (match, type, content) => {
-        const cleanType = type.toUpperCase();
-        const alertClasses = {
-          NOTE: 'gh-alert gh-alert-note',
-          TIP: 'gh-alert gh-alert-tip',
-          IMPORTANT: 'gh-alert gh-alert-important',
-          WARNING: 'gh-alert gh-alert-warning',
-          CAUTION: 'gh-alert gh-alert-caution',
-        };
-        const alertTitles = {
-          NOTE: 'Note',
-          TIP: 'Tip',
-          IMPORTANT: 'Important',
-          WARNING: 'Warning',
-          CAUTION: 'Caution',
-        };
-        const cleanContent = content
-          .split('\n')
-          .map((line) => line.replace(/^>\s?/, ''))
-          .join('\n');
-
-        return `<div class="${alertClasses[cleanType]}"><div class="flex items-center space-x-1.5 font-bold text-xs tracking-wider uppercase mb-1"><span>${alertTitles[cleanType]}</span></div><div>\n\n${cleanContent}\n\n</div></div>\n`;
-      }
-    );
-  };
-
-  // --- Preprocess KaTeX Math Formulas ---
-  const preprocessKaTeX = (md) => {
-    // 1. Block math: $$ ... $$
-    let result = md.replace(/\$\$([\s\S]+?)\$\$/g, (match, expr) => {
-      try {
-        const html = katex.renderToString(expr.trim(), { displayMode: true, throwOnError: false });
-        return `<div class="katex-display my-4 overflow-x-auto py-2 text-center select-text">${html}</div>`;
-      } catch (err) {
-        return `<div class="p-2 text-xs font-mono text-red-400 bg-red-950/30 rounded border border-red-500/20">${err.message}</div>`;
-      }
-    });
-
-    // 2. Inline math: $ ... $ (excluding currency like $100 or empty space)
-    result = result.replace(/(^|[^\\])\$([^\$\n]+?)\$/g, (match, prefix, expr) => {
-      if (/^\s*\d+([.,]\d+)?\s*$/.test(expr)) return match;
-      try {
-        const html = katex.renderToString(expr.trim(), { displayMode: false, throwOnError: false });
-        return `${prefix}<span class="katex-inline select-text">${html}</span>`;
-      } catch {
-        return match;
-      }
-    });
-
-    return result;
-  };
-
-  // --- Initialize Mermaid Config ---
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.mermaid) {
-      window.mermaid.initialize({
-        startOnLoad: false,
-        theme: currentTheme.mode === 'dark' ? 'dark' : 'default',
-        securityLevel: 'loose',
-        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-      });
-    }
-  }, [currentTheme]);
-
-  // --- Markdown Parser with KaTeX, Mermaid & Highlight.js ---
-  const parsedHtml = useMemo(() => {
-    try {
-      const withAlerts = preprocessGitHubAlerts(activeDoc?.content || '');
-      const withMath = preprocessKaTeX(withAlerts);
-
-      const renderer = new marked.Renderer();
-
-      // Custom code block renderer with Window-Header & 1-Click Copy
-      renderer.code = function({ text, lang }) {
-        if (lang === 'mermaid') {
-          return `<div class="mermaid-container my-4 p-4 rounded-lg border border-neutral-700/50 bg-black/25 flex justify-center overflow-x-auto"><pre class="mermaid select-text">${text}</pre></div>`;
-        }
-
-        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-        let highlighted = '';
-        try {
-          highlighted = hljs.highlight(text, { language }).value;
-        } catch {
-          highlighted = hljs.highlightAuto(text).value;
-        }
-
-        const encoded = encodeURIComponent(text);
-        return `
-          <div class="studio-code-block my-4 rounded-lg border border-neutral-700/50 overflow-hidden bg-neutral-900/60 shadow-sm">
-            <div class="code-header flex items-center justify-between px-3 py-1.5 bg-neutral-800/60 border-b border-neutral-700/40 text-[11px] font-mono select-none">
-              <span class="text-blue-400 font-semibold uppercase tracking-wider">${language}</span>
-              <button onclick="navigator.clipboard.writeText(decodeURIComponent('${encoded}')).then(() => { this.innerText = 'Copied!'; setTimeout(() => this.innerText = 'Copy', 1500); })" class="px-2 py-0.5 rounded hover:bg-white/10 text-neutral-300 text-[10px] transition-colors border border-white/10">Copy</button>
-            </div>
-            <pre class="p-3 overflow-x-auto text-[13px] leading-relaxed font-mono"><code class="hljs language-${language}">${highlighted}</code></pre>
-          </div>
-        `;
-      };
-
-      marked.setOptions({
-        gfm: true,
-        breaks: true,
-        renderer,
-      });
-
-      const rawHtml = marked.parse(withMath);
-      return DOMPurify.sanitize(rawHtml, {
-        ADD_ATTR: ['target', 'data-task-index', 'onclick'],
-        ADD_TAGS: ['svg', 'g', 'path', 'text', 'line', 'rect', 'circle', 'polygon', 'defs', 'marker'],
-      });
-    } catch (e) {
-      return `<div class="p-4 text-red-400 bg-red-950/40 rounded border border-red-500/20">Render Error: ${e.message}</div>`;
-    }
-  }, [activeDoc?.content]);
-
-  // --- Run Mermaid Diagrams after Render ---
-  useEffect(() => {
-    if (previewRef.current && typeof window !== 'undefined' && window.mermaid) {
-      const nodes = previewRef.current.querySelectorAll('.mermaid');
-      if (nodes.length > 0) {
-        window.mermaid.run({ nodes }).catch((err) => {
-          console.warn('Mermaid diagram render notice:', err);
-        });
-      }
-    }
-  }, [parsedHtml, currentTheme]);
-
-  // --- Statistics ---
-  const stats = useMemo(() => {
-    const text = (activeDoc?.content || '').trim();
-    const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
-    const chars = text.length;
-    const lines = (activeDoc?.content || '').split('\n').length;
-    const readingTime = Math.max(1, Math.ceil(words / 200));
-    return { words, chars, lines, readingTime };
-  }, [activeDoc?.content]);
 
   // --- Formatting Helpers ---
   const insertFormatting = (prefix, suffix = '', defaultPlaceholder = 'text') => {
