@@ -75,14 +75,13 @@ export default function StudioHeader({
           )}
         </button>
 
-        <div className="flex items-center space-x-1.5 font-bold tracking-tight shrink-0">
-          <span className="w-5 h-5 rounded bg-blue-600 text-white flex items-center justify-center font-mono font-black text-xs shadow">
-            ⚡
-          </span>
+        <div className="flex items-center space-x-2 font-bold tracking-tight shrink-0">
+          <div className="w-6 h-6 rounded bg-gradient-to-br from-blue-500 to-blue-700 shadow-sm flex items-center justify-center border border-white/10">
+            <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 17V7l7 6 7-6v10" />
+            </svg>
+          </div>
           <span className="font-extrabold tracking-tight text-sm">mdview</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-400 font-mono hidden sm:inline">
-            STUDIO
-          </span>
         </div>
 
         <div
