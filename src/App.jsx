@@ -142,10 +142,10 @@ export default function App() {
         fontWeight: 'bold',
       },
       '.cm-selectionBackground': {
-        backgroundColor: currentTheme.mode === 'dark' ? 'rgba(56, 139, 253, 0.35) !important' : 'rgba(9, 105, 218, 0.2) !important',
+        backgroundColor: currentTheme.mode === 'dark' ? 'rgba(56, 139, 253, 0.35) !important' : '#99c9ff !important',
       },
       '.cm-content ::selection': {
-        backgroundColor: currentTheme.mode === 'dark' ? 'rgba(56, 139, 253, 0.35) !important' : 'rgba(9, 105, 218, 0.2) !important',
+        backgroundColor: currentTheme.mode === 'dark' ? 'rgba(56, 139, 253, 0.35) !important' : '#99c9ff !important',
         color: 'inherit !important',
       },
       '.cm-cursor': {
