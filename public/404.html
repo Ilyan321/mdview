@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 - Not Found | mdview</title>
+  
+  <meta name="theme-color" content="#0d1117" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Menlo', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-[#0d1117] text-[#e6edf3] font-sans h-screen flex flex-col items-center justify-center antialiased selection:bg-blue-600 selection:text-white">
+  
+  <div class="max-w-md w-full p-8 text-center space-y-6 flex flex-col items-center animate-[fadeIn_0.5s_ease-out]">
+    
+    <!-- mdview Logo -->
+    <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg flex items-center justify-center border border-white/10 mb-2">
+      <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 17V7l7 6 7-6v10" />
+      </svg>
+    </div>
+    
+    <!-- Error Text -->
+    <div class="space-y-2">
+      <h1 class="text-7xl font-black tracking-tighter text-white drop-shadow-md">404</h1>
+      <h2 class="text-xl font-semibold opacity-90 tracking-tight">Document Not Found</h2>
+      <p class="text-xs opacity-50 font-mono pt-1">ERR_INVALID_PATH</p>
+    </div>
+    
+    <!-- Explanation Box -->
+    <div class="w-full p-4 rounded-xl bg-[#161b22] border border-[#30363d] text-left text-[13px] opacity-80 shadow-inner">
+      <p>The markdown file or path you are looking for could not be found. It may have been deleted, moved, or the URL might be typed incorrectly.</p>
+    </div>
+
+    <!-- Return Button -->
+    <div class="pt-4">
+      <a href="/" class="inline-flex items-center space-x-2 px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/20 text-white font-semibold text-sm transition-all active:scale-95">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        <span>Return to Workspace</span>
+      </a>
+    </div>
+    
+  </div>
+
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</body>
+</html>
