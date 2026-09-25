@@ -10,6 +10,7 @@ export default function HelpModal({ showHelp, setShowHelp, currentTheme }) {
         style={{
           backgroundColor: currentTheme.card,
           borderColor: currentTheme.border,
+          color: currentTheme.text,
         }}
         className="w-full max-w-md rounded-xl shadow-2xl border p-5 space-y-4"
       >
@@ -20,7 +21,8 @@ export default function HelpModal({ showHelp, setShowHelp, currentTheme }) {
           </div>
           <button
             onClick={() => setShowHelp(false)}
-            className="p-1 rounded hover:bg-white/10 opacity-70 hover:opacity-100 transition-colors"
+            className="p-1 rounded opacity-70 hover:opacity-100 transition-colors"
+            style={{ backgroundColor: 'transparent' }}
           >
             <X className="w-4 h-4" />
           </button>
@@ -39,10 +41,17 @@ export default function HelpModal({ showHelp, setShowHelp, currentTheme }) {
           ].map((item, idx) => (
             <div
               key={idx}
-              className="flex items-center justify-between py-1 border-b border-white/5"
+              className="flex items-center justify-between py-1 border-b"
+              style={{ borderColor: currentTheme.border }}
             >
               <span className="opacity-80">{item.desc}</span>
-              <kbd className="px-2 py-0.5 rounded bg-black/20 font-mono text-[11px] font-semibold border border-white/10">
+              <kbd 
+                className="px-2 py-0.5 rounded font-mono text-[11px] font-semibold border"
+                style={{ 
+                  backgroundColor: currentTheme.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)',
+                  borderColor: currentTheme.border 
+                }}
+              >
                 {item.key}
               </kbd>
             </div>
