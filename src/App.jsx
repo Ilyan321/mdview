@@ -59,7 +59,7 @@ export default function App() {
     return localStorage.getItem('mdview_sync_scroll') === 'true'; // Defaults to false (independent scrolling)
   });
   const [currentThemeId, setCurrentThemeId] = useState(() => {
-    return localStorage.getItem('mdview_theme_id') || 'github-dark';
+    return localStorage.getItem('mdview_theme_id') || 'github-light';
   });
   const [showHelp, setShowHelp] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
