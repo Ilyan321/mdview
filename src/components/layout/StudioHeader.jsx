@@ -81,7 +81,7 @@ export default function StudioHeader({
               <path d="M4 17V7l7 6 7-6v10" />
             </svg>
           </div>
-          <span className="font-extrabold tracking-tight text-sm">mdview</span>
+          <span className="font-extrabold tracking-tight text-sm hidden sm:inline">mdview</span>
         </div>
 
         <div
@@ -156,7 +156,7 @@ export default function StudioHeader({
       {/* Right: Actions & Theme Picker */}
       <div className="flex items-center space-x-1 shrink-0">
         {/* Presets */}
-        <div className="relative">
+        <div className="relative hidden md:block">
           <button
             onClick={() => {
               setShowTemplates(!showTemplates);
@@ -305,7 +305,7 @@ export default function StudioHeader({
         <button
           onClick={handleDownloadStandaloneHtml}
           style={{ borderColor: currentTheme.border }}
-          className="flex items-center space-x-1 px-2 py-1 rounded border hover:bg-neutral-500/15 text-[11px] font-medium transition-colors"
+          className="hidden md:flex items-center space-x-1 px-2 py-1 rounded border hover:bg-neutral-500/15 text-[11px] font-medium transition-colors"
           title="Export Standalone Offline HTML"
         >
           <FileCheck className="w-3 h-3 text-emerald-400" />
@@ -336,7 +336,7 @@ export default function StudioHeader({
         <button
           onClick={() => window.print()}
           style={{ borderColor: currentTheme.border }}
-          className="p-1.5 rounded border hover:bg-neutral-500/15 transition-colors"
+          className="hidden md:flex p-1.5 rounded border hover:bg-neutral-500/15 transition-colors"
           title="Print or Export to PDF"
         >
           <Printer className="w-3.5 h-3.5 opacity-80" />
@@ -346,7 +346,7 @@ export default function StudioHeader({
         <button
           onClick={() => setShowPrivacy && setShowPrivacy(true)}
           style={{ borderColor: currentTheme.border }}
-          className="p-1.5 rounded border hover:bg-neutral-500/15 transition-colors text-emerald-400"
+          className="hidden md:flex p-1.5 rounded border hover:bg-neutral-500/15 transition-colors text-emerald-400"
           title="Privacy, Security & Data Sovereignty"
         >
           <ShieldCheck className="w-3.5 h-3.5" />
@@ -357,7 +357,7 @@ export default function StudioHeader({
           <button
             onClick={toggleZenMode}
             style={{ borderColor: currentTheme.border }}
-            className="p-1.5 rounded border hover:bg-neutral-500/15 transition-colors text-amber-400"
+            className="hidden md:flex p-1.5 rounded border hover:bg-neutral-500/15 transition-colors text-amber-400"
             title="Distraction-Free Zen Mode (Alt+Z)"
           >
             <Maximize2 className="w-3.5 h-3.5" />
@@ -368,7 +368,7 @@ export default function StudioHeader({
         <button
           onClick={() => setShowHelp(true)}
           style={{ borderColor: currentTheme.border }}
-          className={`p-1.5 rounded border hover:bg-neutral-500/15 transition-colors ${activeTextColor}`}
+          className={`hidden md:flex p-1.5 rounded border hover:bg-neutral-500/15 transition-colors ${activeTextColor}`}
           title="Shortcuts Guide (F1)"
         >
           <HelpCircle className="w-3.5 h-3.5" />
