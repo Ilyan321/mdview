@@ -119,13 +119,14 @@ export default function StudioHeader({
           backgroundColor: currentTheme.bg,
           borderColor: currentTheme.border,
         }}
-        className="hidden lg:flex items-center p-0.5 rounded border space-x-0.5 shrink-0"
+        className="flex items-center p-0.5 rounded border space-x-0.5 shrink-0"
       >
         <button
           onClick={() => setViewMode('split')}
-          className={`flex items-center space-x-1 px-2.5 py-0.5 text-[11px] font-semibold rounded transition-all ${
+          className={`hidden lg:flex items-center space-x-1 px-2.5 py-0.5 text-[11px] font-semibold rounded transition-all ${
             viewMode === 'split' ? 'bg-blue-600 text-white' : 'opacity-60 hover:opacity-100'
           }`}
+          title="Split View"
         >
           <Columns className="w-3 h-3" />
           <span>Split</span>
@@ -135,18 +136,20 @@ export default function StudioHeader({
           className={`flex items-center space-x-1 px-2.5 py-0.5 text-[11px] font-semibold rounded transition-all ${
             viewMode === 'editor' ? 'bg-blue-600 text-white' : 'opacity-60 hover:opacity-100'
           }`}
+          title="Editor View"
         >
           <Edit3 className="w-3 h-3" />
-          <span>Editor</span>
+          <span className="hidden lg:inline">Editor</span>
         </button>
         <button
           onClick={() => setViewMode('preview')}
           className={`flex items-center space-x-1 px-2.5 py-0.5 text-[11px] font-semibold rounded transition-all ${
             viewMode === 'preview' ? 'bg-blue-600 text-white' : 'opacity-60 hover:opacity-100'
           }`}
+          title="Preview View"
         >
           <Eye className="w-3 h-3" />
-          <span>Preview</span>
+          <span className="hidden lg:inline">Preview</span>
         </button>
       </div>
 

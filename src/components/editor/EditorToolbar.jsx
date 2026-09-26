@@ -144,7 +144,7 @@ export default function EditorToolbar({
           ) : (
             <Unlink className="w-3 h-3 opacity-60" />
           )}
-          <span className="text-[10px] tracking-tight">
+          <span className="hidden sm:inline text-[10px] tracking-tight">
             {syncScroll ? 'Sync On' : 'Independent'}
           </span>
         </button>

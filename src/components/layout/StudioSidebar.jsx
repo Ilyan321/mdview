@@ -3,6 +3,7 @@ import { FolderOpen, ListTree, Plus, FileCode, Trash2 } from 'lucide-react';
 
 export default function StudioSidebar({
   sidebarOpen,
+  setSidebarOpen,
   sidebarTab,
   setSidebarTab,
   documents,
@@ -26,7 +27,7 @@ export default function StudioSidebar({
         backgroundColor: currentTheme.card,
         borderColor: currentTheme.border,
       }}
-      className="w-64 border-r flex flex-col shrink-0 select-none z-20"
+      className="w-64 border-r flex flex-col shrink-0 select-none z-40 absolute md:relative h-full shadow-2xl md:shadow-none"
     >
       {/* Sidebar Tab Header */}
       <div
@@ -83,7 +84,10 @@ export default function StudioSidebar({
               return (
                 <div
                   key={doc.id}
-                  onClick={() => setActiveDocId(doc.id)}
+                  onClick={() => {
+                    setActiveDocId(doc.id);
+                    if (window.innerWidth < 768) setSidebarOpen(false);
+                  }}
                   className={`group flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition-colors ${
                     isActive
                       ? `bg-blue-600/15 ${activeTextColor} font-semibold border border-blue-500/30`

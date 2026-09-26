@@ -68,6 +68,18 @@ export default function App() {
   const [isDragging, setIsDragging] = useState(false);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
 
+  // --- Responsive Layout Handler ---
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024 && viewMode === 'split') {
+        setViewMode('editor');
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [viewMode]);
+
   // --- DOM Refs ---
   const editorViewRef = useRef(null);
   const previewRef = useRef(null);
@@ -538,10 +550,19 @@ export default function App() {
 
       {/* 2. MAIN WORKSPACE BODY */}
       <div className="flex-1 flex overflow-hidden">
+        {/* MOBILE SIDEBAR BACKDROP */}
+        {!zenMode && sidebarOpen && (
+          <div
+            className="md:hidden fixed inset-0 z-30 bg-black/50 backdrop-blur-sm"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* COLLAPSIBLE SIDEBAR */}
         {!zenMode && (
           <StudioSidebar
             sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
             sidebarTab={sidebarTab}
             setSidebarTab={setSidebarTab}
             documents={documents}
