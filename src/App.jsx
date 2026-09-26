@@ -51,9 +51,9 @@ export default function App() {
   } = useDocumentStore(showToast);
 
   // --- UI Layout State ---
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const [sidebarTab, setSidebarTab] = useState('explorer'); // 'explorer' | 'outline'
-  const [viewMode, setViewMode] = useState('split'); // 'split' | 'editor' | 'preview'
+  const [viewMode, setViewMode] = useState(() => window.innerWidth < 1024 ? 'editor' : 'split'); // 'split' | 'editor' | 'preview'
   const [splitRatio, setSplitRatio] = useState(50);
   const [syncScroll, setSyncScroll] = useState(() => {
     return localStorage.getItem('mdview_sync_scroll') === 'true'; // Defaults to false (independent scrolling)
